@@ -17,47 +17,81 @@
 #include <string.h>
 #include <raylib.h>
 
+typedef enum GameScreen {
+    StartScreen = 0,
+    PlayScreen
+} GameScreen;
 
 
 int main(void)
 {
-    InitWindow(0, 0, "Game");
-
+    
+    // screen size init
     const int screenWidth = GetScreenWidth();
     const int screenHeight = GetScreenHeight();
 
-    printf("\nScreen height: %d\n", screenHeight);
-    printf("\nScreen width: %d\n", screenWidth);
+    InitWindow(screenWidth, screenHeight, "Game");
 
+    GameScreen currentScreen = StartScreen;
+    //programmers.png init
     Image programmers_image = LoadImage("programmers.png");
     Texture2D programmers_texture = LoadTextureFromImage(programmers_image);
+    //free memory from Image)
     UnloadImage(programmers_image);
-
+    // init button
+    Rectangle startbutton = { (screenWidth/2), (screenHeight/2), 500, 100};
+    // button bounds
+    Rectangle startbtnbounds = { 0, 0, (float)startbutton.width, (float)startbutton.height};
+    // init mouse
+    Vector2 mousePoint = { 0.0f, 0.0f };
     
-
-    int game_state = 0;
+    SetTargetFPS(60);
     
     while (!WindowShouldClose())
     {
+        mousePoint = GetMousePosition();
+        switch(currentScreen)
+        {
+            case StartScreen:
+            {
+                if(CheckCollisionPointRec(mousePoint, startbtnbounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                {
+                    currentScreen = PlayScreen;
+                }
+                break;
+            }
+            case PlayScreen:
+            {
+                
+                break;
+            }        
+        }
         BeginDrawing();
 
         ClearBackground(WHITE);
 
-        if(game_state == 0)
+        switch(currentScreen)
         {
-            DrawText("Welcome! \nThis is my first C program that I have made on my own. \nHave fun!", 2, 2, 50, BLACK);
-            int screen_width_half = screenWidth / 2;
-            DrawRectangle((screen_width_half - 250), 1200, 500, 100, BLACK);
-            DrawText("START",(screen_width_half - 175), 1200, 100, WHITE);
+            case StartScreen:
+            {
+                DrawText("Welcome! \nThis is my first C program that I have made on my own. \nHave fun!", 2, 2, 50, BLACK);
+                
+                DrawRectangle((screenWidth/2), ((screenHeight/2)/2), startbutton.width, startbutton.height, BLACK);
+                DrawText("START",(screenWidth/2), ((screenHeight/2)/2), 100, WHITE);
             
-            // I used ChatGPT.com to figure out how to center the image 
-            DrawTexture(programmers_texture, ((screenWidth - programmers_texture.width)/2), ((screenHeight - programmers_texture.height)/2), WHITE);
+                // I used ChatGPT.com to figure out how to center the image 
+                DrawTexture(programmers_texture, ((screenWidth - programmers_texture.width)/2), ((screenHeight - programmers_texture.height)/2), WHITE);
 
-            // referenced button properties from user https://www.raylib.com/examples/textures/loader.html?name=textures_sprite_button
+                // referenced button properties from user https://www.raylib.com/examples/textures/loader.html?name=textures_sprite_button
+                break;
+            }
+            
+            case PlayScreen:
+            {
+                DrawText("Play Screen", 0, 0, 20, BLACK);
+                break;
+            }
         }
-
-
-
 
         EndDrawing();
     }
