@@ -25,14 +25,18 @@ typedef enum GameScreen {
 
 int main(void)
 {
+    InitWindow(1500, 1000, "Game");
+
     
     // screen size init
     const int screenWidth = GetScreenWidth();
+    printf("screenWidth: %i", screenWidth);
     const int screenHeight = GetScreenHeight();
-
-    InitWindow(screenWidth, screenHeight, "Game");
+    printf("screenHeight: %i", screenHeight);
+    
 
     GameScreen currentScreen = StartScreen;
+    // StartScreen 
     //programmers.png init
     Image programmers_image = LoadImage("programmers.png");
     Texture2D programmers_texture = LoadTextureFromImage(programmers_image);
@@ -40,11 +44,25 @@ int main(void)
     UnloadImage(programmers_image);
     // init button
     Rectangle startbutton = { (screenWidth/2), (screenHeight/2), 500, 100};
+
+    float rectX = (screenWidth/2);
+    float rectY = (screenHeight/2);
     // button bounds
-    Rectangle startbtnbounds = { 0, 0, (float)startbutton.width, (float)startbutton.height};
+    Rectangle startbtnbounds = { rectX-(startbutton.width/2), (rectY + 350), (float)startbutton.width, (float)startbutton.height};
     // init mouse
     Vector2 mousePoint = { 0.0f, 0.0f };
-    
+
+    // PlayScreen
+    // exit button
+    Rectangle exit_button = {0, 0, 20, 20};
+    Rectangle exit_button_bounds = {0, 0, exit_button.width, exit_button.height};
+    //exit.png init
+    Image exit_image = LoadImage("exitdoor.png");
+    ImageResize(&exit_image, 100, 100);
+    Texture2D exit_texture = LoadTextureFromImage(exit_image);
+    //free exit.png memory
+    UnloadImage(exit_image);
+
     SetTargetFPS(60);
     
     while (!WindowShouldClose())
@@ -54,6 +72,7 @@ int main(void)
         {
             case StartScreen:
             {
+                
                 if(CheckCollisionPointRec(mousePoint, startbtnbounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 {
                     currentScreen = PlayScreen;
@@ -75,9 +94,12 @@ int main(void)
             case StartScreen:
             {
                 DrawText("Welcome! \nThis is my first C program that I have made on my own. \nHave fun!", 2, 2, 50, BLACK);
+                // Used ChatGPT to help with centering button and image
                 
-                DrawRectangle((screenWidth/2), ((screenHeight/2)/2), startbutton.width, startbutton.height, BLACK);
-                DrawText("START",(screenWidth/2), ((screenHeight/2)/2), 100, WHITE);
+                DrawRectangle(rectX-(startbutton.width/2), (rectY + 350), startbutton.width, startbutton.height, BLACK);
+                // measure text width
+                int textWidth = MeasureText("START", 100);
+                DrawText("START", rectX-(textWidth/2), (rectY+350)+(startbutton.height/2) - (100/2), 100, WHITE);
             
                 // I used ChatGPT.com to figure out how to center the image 
                 DrawTexture(programmers_texture, ((screenWidth - programmers_texture.width)/2), ((screenHeight - programmers_texture.height)/2), WHITE);
@@ -88,8 +110,13 @@ int main(void)
             
             case PlayScreen:
             {
-                DrawText("Play Screen", 0, 0, 20, BLACK);
+                DrawText("Play Screen", (screenWidth/2), 0, 20, BLACK);
+
+                DrawTexture(exit_texture, (screenWidth/2), 30, WHITE);
                 break;
+
+
+
             }
         }
 
