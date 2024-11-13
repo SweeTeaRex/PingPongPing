@@ -106,11 +106,13 @@ int main(void)
 
                 if (!pause)
                 {
-                    
-                    
+                    ballPosition.x += ballSpeed.x;
+                    ballPosition.y += ballSpeed.y;
 
-if ((ballPosition.x >= (GetScreenWidth() - ballRadius)) || (ballPosition.x <= ballRadius)) ballSpeed.x *= -1.0f;
+                    // Check walls collision for bouncing
+                    if ((ballPosition.x >= (GetScreenWidth() - ballRadius)) || (ballPosition.x <= ballRadius)) ballSpeed.x *= -1.0f;
                     if ((ballPosition.y >= (GetScreenHeight() - ballRadius)) || (ballPosition.y <= ballRadius)) ballSpeed.y *= -1.0f;
+                }
                 break;
             }        
         }
@@ -161,9 +163,10 @@ if ((ballPosition.x >= (GetScreenWidth() - ballRadius)) || (ballPosition.x <= ba
 
         EndDrawing();
     }
-
+    
     CloseWindow();
     
     
     return 0;
+    
 }
