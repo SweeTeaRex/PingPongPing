@@ -73,8 +73,8 @@ int main(void)
     int framesCounter = 0;
 
     // init paddles
-    Rectangle paddleLeft = { (screenWidth-(screenWidth/16)*15), (screenHeight/2), 25, 300};
-    Rectangle paddleRight = { (screenWidth-(screenWidth/16)*1), (screenHeight/2), 25, 300};
+    Rectangle paddleLeft = { (screenWidth-(screenWidth/16)*15), 0, 25, 100};
+    Rectangle paddleRight = { (screenWidth-(screenWidth/16)*1), 0, 25, 100};
     // paddle bounds
     Rectangle paddleLeft_bounds = {0, 0, paddleLeft.width, paddleLeft.height};
     Rectangle paddleRight_bounds = {0, 0, paddleRight.width, paddleRight.height };
@@ -106,13 +106,67 @@ int main(void)
 
                 if (!pause)
                 {
+                    // ball moving
                     ballPosition.x += ballSpeed.x;
                     ballPosition.y += ballSpeed.y;
+
+                    
 
                     // Check walls collision for bouncing
                     if ((ballPosition.x >= (GetScreenWidth() - ballRadius)) || (ballPosition.x <= ballRadius)) ballSpeed.x *= -1.0f;
                     if ((ballPosition.y >= (GetScreenHeight() - ballRadius)) || (ballPosition.y <= ballRadius)) ballSpeed.y *= -1.0f;
+                    // check paddles for collision
+                    // ChatGPT used to adjust ball so sticking to paddle is avoided
+                    // Left paddle
+                    if (CheckCollisionCircleRec(ballPosition, ballRadius, paddleLeft)) {
+                        ballSpeed.x *= -1.0f;
+                        ballSpeed.y *= 1.0f;
+                        ballPosition.x = paddleLeft.x + paddleLeft.width + ballRadius;
+                        
+                    }
+                    // Right paddle
+                    if (CheckCollisionCircleRec(ballPosition, ballRadius, paddleRight)) {
+                        ballSpeed.x *= -1.0f;
+                        ballSpeed.y *= 1.0f;
+                        ballPosition.x = paddleRight.x - ballRadius;
+                    }
+                    // Left paddle controls init
+                    if (IsKeyDown(KEY_W))
+                    {
+                        if (paddleLeft.y >= 0)
+                        {
+                            paddleLeft.y -= 10.0f;
+                        }
+
+                    }
+                    if (IsKeyDown(KEY_S))
+                    {
+                        
+                        if (paddleLeft.y+paddleLeft.height< screenHeight)
+                        {
+                            paddleLeft.y += 10.0f;
+                        }
+                    }
+                    
+                    // right paddle moving
+                    if (ballPosition.y < (paddleRight.y+paddleRight.height/2))
+                    {
+                        paddleRight.y -= 4.0f;
+                    }
+                    else if (ballPosition.y > (paddleRight.y+paddleRight.height/2))
+                    {
+                        paddleRight.y += 4.0f;
+                    }
+
+                    // right paddle boundary
+                    if (paddleRight.y < 0) paddleRight.y=0;
+                    if ((paddleRight.y+paddleRight.height) > GetScreenHeight())
+                    {
+                        paddleRight.y = GetScreenHeight()-paddleRight.height;
+                    }
+
                 }
+                else framesCounter++;
                 break;
             }        
         }
