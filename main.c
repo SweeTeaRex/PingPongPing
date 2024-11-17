@@ -18,6 +18,7 @@
 #include <raylib.h>
 
 typedef enum GameScreen {
+    
     StartScreen = 0,
     PlayScreen
 } GameScreen;
@@ -34,6 +35,7 @@ int main(void)
     const int screenHeight = GetScreenHeight();
     printf("screenHeight: %i", screenHeight);
     
+    InitAudioDevice();
 
     GameScreen currentScreen = StartScreen;
 
@@ -54,6 +56,13 @@ int main(void)
 
     // ----PlayScreen------
 
+    // init sound files
+    Sound startSound = LoadSound("sounds/01_Shop Channel Title.wav");
+    Sound playSound = LoadSound("sounds/02_Shop Channel.wav");
+    Sound ballbouncefx = LoadSound("sounds/Mario-coin-sound.wav");
+    // check for if sound is already playing
+    bool startSoundPlayed = false;
+    bool playSoundPlayed = false;
     // exit button
     Rectangle exit_button = {0, 0, 100, 100};
     Rectangle exit_button_bounds = {(screenWidth/2), 30, exit_button.width, exit_button.height};
@@ -73,8 +82,8 @@ int main(void)
     int framesCounter = 0;
 
     // init paddles
-    Rectangle paddleLeft = { (screenWidth-(screenWidth/16)*15), 0, 25, 100};
-    Rectangle paddleRight = { (screenWidth-(screenWidth/16)*1), 0, 25, 100};
+    Rectangle paddleLeft = { (screenWidth-(screenWidth/16)*15), (screenHeight/2), 25, 100};
+    Rectangle paddleRight = { (screenWidth-(screenWidth/16)*1), (screenHeight/2), 25, 100};
     // paddle bounds
     Rectangle paddleLeft_bounds = {0, 0, paddleLeft.width, paddleLeft.height};
     Rectangle paddleRight_bounds = {0, 0, paddleRight.width, paddleRight.height };
@@ -85,22 +94,61 @@ int main(void)
     while (!WindowShouldClose())
     {
         mousePoint = GetMousePosition();
+
+        if (currentScreen == StartScreen && CheckCollisionPointRec(mousePoint, startbtnbounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            // Transition to PlayScreen
+            currentScreen = PlayScreen;
+            
+            // Reset flags for the new screen
+            startSoundPlayed = false;
+            playSoundPlayed = false;
+        }
+
+        if (currentScreen == PlayScreen && CheckCollisionPointRec(mousePoint, exit_button_bounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            // Transition to PlayScreen
+            currentScreen = StartScreen;
+            
+            // Reset flags for the new screen
+            startSoundPlayed = false;
+            playSoundPlayed = false;
+        }
+
         switch(currentScreen)
         {
+            
             case StartScreen:
             {
-                
-                if(CheckCollisionPointRec(mousePoint, startbtnbounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                if (!startSoundPlayed)
                 {
-                    currentScreen = PlayScreen;
+                    PlaySound(startSound);
+                    StopSound(playSound);
+                    startSoundPlayed = true;
+                    
                 }
+
+                
+
+                
                 break;
             }
             case PlayScreen:
             {
+                if (!playSoundPlayed)
+                {
+                    PlaySound(playSound);
+                    StopSound(startSound);
+                    playSoundPlayed = true;
+                    startSoundPlayed = false;
+                }
+
+                
+
                 if(CheckCollisionPointRec(mousePoint, exit_button_bounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 {
                     currentScreen = StartScreen;
+                    playSoundPlayed = false;
                 }
                 if (IsKeyPressed(KEY_SPACE)) pause = !pause;
 
@@ -122,6 +170,7 @@ int main(void)
                         ballSpeed.x *= -1.0f;
                         ballSpeed.y *= 1.0f;
                         ballPosition.x = paddleLeft.x + paddleLeft.width + ballRadius;
+                        PlaySound(ballbouncefx);
                         
                     }
                     // Right paddle
@@ -129,8 +178,11 @@ int main(void)
                         ballSpeed.x *= -1.0f;
                         ballSpeed.y *= 1.0f;
                         ballPosition.x = paddleRight.x - ballRadius;
+                        PlaySound(ballbouncefx);
+
                     }
                     // Left paddle controls init
+                    // Up key function
                     if (IsKeyDown(KEY_W))
                     {
                         if (paddleLeft.y >= 0)
@@ -139,6 +191,7 @@ int main(void)
                         }
 
                     }
+                    // Down key function
                     if (IsKeyDown(KEY_S))
                     {
                         
@@ -178,13 +231,14 @@ int main(void)
         {
             case StartScreen:
             {
+                
                 DrawText("Welcome! \nThis is my first C program that I have made on my own. \nHave fun!", 2, 2, 50, BLACK);
                 // Used ChatGPT to help with centering button and image
                 
                 DrawRectangle((screenWidth/2)-(startbutton.width/2), ((screenHeight/2) + 350), startbutton.width, startbutton.height, BLACK);
                 // measure text width
                 int textWidth = MeasureText("START", 100);
-                DrawText("START", (screenWidth/2)-(textWidth/2), ((screenHeight/2)+350)+(startbutton.height/2) - (100/2), 100, WHITE);
+                DrawText("Click To Start", (screenWidth/2)-(textWidth/2), ((screenHeight/2)+350)+(startbutton.height/2) - (100/2), 50, WHITE);
             
                 // I used ChatGPT.com to figure out how to center the image 
                 DrawTexture(programmers_texture, ((screenWidth - programmers_texture.width)/2), ((screenHeight - programmers_texture.height)/2), WHITE);
@@ -195,6 +249,7 @@ int main(void)
             
             case PlayScreen:
             {
+                
                 //Draw Exit Sign
                 DrawText("Click to Exit", (screenWidth/2), 0, 20, BLACK);
                 DrawTexture(exit_texture, (screenWidth/2), 30, WHITE);
@@ -217,7 +272,8 @@ int main(void)
 
         EndDrawing();
     }
-    
+    UnloadSound(ballbouncefx);
+    CloseAudioDevice();
     CloseWindow();
     
     
