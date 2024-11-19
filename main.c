@@ -34,7 +34,7 @@ int main(void)
     printf("screenWidth: %i", screenWidth);
     const int screenHeight = GetScreenHeight();
     printf("screenHeight: %i", screenHeight);
-    
+    // init audio device
     InitAudioDevice();
 
     GameScreen currentScreen = StartScreen;
@@ -42,7 +42,7 @@ int main(void)
     // ------StartScreen-------- 
 
     //programmers.png init
-    Image programmers_image = LoadImage("programmers.png");
+    Image programmers_image = LoadImage("images/programmers.png");
     Texture2D programmers_texture = LoadTextureFromImage(programmers_image);
     //free memory from Image)
     UnloadImage(programmers_image);
@@ -66,16 +66,22 @@ int main(void)
     // exit button
     Rectangle exit_button = {0, 0, 100, 100};
     Rectangle exit_button_bounds = {(screenWidth/2), 30, exit_button.width, exit_button.height};
-    //exit.png init
-    Image exit_image = LoadImage("exitdoor.png");
-    ImageResize(&exit_image, 100, 100);
-    Texture2D exit_texture = LoadTextureFromImage(exit_image);
-    //free exit.png memory
-    UnloadImage(exit_image);
     //init bouncing ball
     Vector2 ballPosition = { screenWidth/2.0f, screenHeight/2.0f };
-    Vector2 ballSpeed = { 5.0f, 4.0f };
-    int ballRadius = 20;
+    Vector2 ballSpeed = { 7.0f, 7.0f };
+    int ballRadius = 100;
+    //exit.png init
+    Image exit_image = LoadImage("images/exitdoor.png");
+    ImageResize(&exit_image, 100, 100);
+    Texture2D exit_texture = LoadTextureFromImage(exit_image);
+    // trollface.png init
+    Image trollface = LoadImage("images/Trollface.png");
+    ImageDrawCircleV(&trollface, ballPosition, ballRadius, WHITE);
+    ImageResize(&trollface, ballRadius*2, ballRadius*2);
+    Texture2D troll_texture = LoadTextureFromImage(trollface);
+    //free exit.png memory
+    UnloadImage(exit_image);
+    
     // pause menu init
     bool pause = 0;
     // frame counter
@@ -89,12 +95,12 @@ int main(void)
     Rectangle paddleRight_bounds = {0, 0, paddleRight.width, paddleRight.height };
 
 
-    SetTargetFPS(60);
+    SetTargetFPS(60); 
     
     while (!WindowShouldClose())
     {
         mousePoint = GetMousePosition();
-
+        // startscreem 
         if (currentScreen == StartScreen && CheckCollisionPointRec(mousePoint, startbtnbounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             // Transition to PlayScreen
@@ -104,7 +110,7 @@ int main(void)
             startSoundPlayed = false;
             playSoundPlayed = false;
         }
-
+        // playscreen
         if (currentScreen == PlayScreen && CheckCollisionPointRec(mousePoint, exit_button_bounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             // Transition to PlayScreen
@@ -116,20 +122,15 @@ int main(void)
         }
 
         switch(currentScreen)
-        {
-            
+        {            
             case StartScreen:
             {
                 if (!startSoundPlayed)
                 {
                     PlaySound(startSound);
                     StopSound(playSound);
-                    startSoundPlayed = true;
-                    
+                    startSoundPlayed = true;                    
                 }
-
-                
-
                 
                 break;
             }
@@ -139,11 +140,8 @@ int main(void)
                 {
                     PlaySound(playSound);
                     StopSound(startSound);
-                    playSoundPlayed = true;
-                    startSoundPlayed = false;
+                    playSoundPlayed = true;                    
                 }
-
-                
 
                 if(CheckCollisionPointRec(mousePoint, exit_button_bounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 {
@@ -156,9 +154,7 @@ int main(void)
                 {
                     // ball moving
                     ballPosition.x += ballSpeed.x;
-                    ballPosition.y += ballSpeed.y;
-
-                    
+                    ballPosition.y += ballSpeed.y;                    
 
                     // Check walls collision for bouncing
                     if ((ballPosition.x >= (GetScreenWidth() - ballRadius)) || (ballPosition.x <= ballRadius)) ballSpeed.x *= -1.0f;
@@ -179,7 +175,6 @@ int main(void)
                         ballSpeed.y *= 1.0f;
                         ballPosition.x = paddleRight.x - ballRadius;
                         PlaySound(ballbouncefx);
-
                     }
                     // Left paddle controls init
                     // Up key function
@@ -187,7 +182,7 @@ int main(void)
                     {
                         if (paddleLeft.y >= 0)
                         {
-                            paddleLeft.y -= 10.0f;
+                            paddleLeft.y -= 15.0f;
                         }
 
                     }
@@ -197,7 +192,7 @@ int main(void)
                         
                         if (paddleLeft.y+paddleLeft.height< screenHeight)
                         {
-                            paddleLeft.y += 10.0f;
+                            paddleLeft.y += 15.0f;
                         }
                     }
                     
@@ -215,7 +210,8 @@ int main(void)
                     if (paddleRight.y < 0) paddleRight.y=0;
                     if ((paddleRight.y+paddleRight.height) > GetScreenHeight())
                     {
-                        paddleRight.y = GetScreenHeight()-paddleRight.height;
+                        paddleRight.y = GetScreenHeight()-paddleRight.height;DrawTexture(troll_texture, ballPosition.x-(trollface.width/2)-ballRadius, ballPosition.y-(trollface.height/2), WHITE);
+                
                     }
 
                 }
@@ -255,7 +251,8 @@ int main(void)
                 DrawTexture(exit_texture, (screenWidth/2), 30, WHITE);
 
                 //Draw ball
-                DrawCircleV(ballPosition, (float)ballRadius, MAROON);
+                DrawTexture(troll_texture, ballPosition.x-(troll_texture.width/2), ballPosition.y-(troll_texture.height/2), WHITE);
+                
 
                 // Draw Paddles
                 DrawRectangle(paddleLeft.x, paddleLeft.y, paddleLeft.width, paddleLeft.height, BLACK);
@@ -273,6 +270,10 @@ int main(void)
         EndDrawing();
     }
     UnloadSound(ballbouncefx);
+    UnloadSound(startSound);
+    UnloadSound(playSound);
+    UnloadImage(trollface);
+    UnloadTexture(troll_texture);
     CloseAudioDevice();
     CloseWindow();
     
