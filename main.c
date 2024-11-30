@@ -17,6 +17,8 @@
 #include <string.h>
 #include <raylib.h>
 
+bool IsMouseOverStartButton(Rectangle, Vector2);
+
 typedef enum GameScreen
 {
     SplashScreen = 0,
@@ -36,6 +38,8 @@ int main(void)
 
     // init mouse
     Vector2 mousePoint = {0.0f, 0.0f};
+    // mouse position
+    
 
     // init audio device
     InitAudioDevice();
@@ -45,12 +49,14 @@ int main(void)
     Image TREX_image = LoadImage("images/TREX.png");
     Texture2D TREX_texture = LoadTextureFromImage(TREX_image);
     UnloadImage(TREX_image);
-
+    // init top and bottom text position
     int topText_yaxis = -50;
     int bottomText_yaxis = screenHeight+10;
 
     // ------StartScreen--------
+    Color startscreen_color = {251, 72, 72, 255};
     
+    // title image
     Image pingPong_image = LoadImage("images/pingpongping.png");
     Texture2D pingpong_text = LoadTextureFromImage(pingPong_image);
     // free memory from Image)
@@ -76,8 +82,7 @@ int main(void)
     // adjust sound volume level
     SetSoundVolume(ballbouncefx, 0.4);
     // check for if sound is already playing
-    bool startSoundPlayed = false;
-    bool playSoundPlayed = false;
+    
 
     // exit button
     Rectangle exit_button = {0, 0, 100, 100};
@@ -118,9 +123,7 @@ int main(void)
     Rectangle paddleLeft = {(screenWidth - (screenWidth / 16) * 15), (screenHeight / 2), 25, 100};
     Rectangle paddleRight = {(screenWidth - (screenWidth / 16) * 1), (screenHeight / 2), 25, 100};
 
-    // paddle bounds
-    Rectangle paddleLeft_bounds = {0, 0, paddleLeft.width, paddleLeft.height};
-    Rectangle paddleRight_bounds = {0, 0, paddleRight.width, paddleRight.height};
+    
 
     SetTargetFPS(60);
 
@@ -139,8 +142,7 @@ int main(void)
             // Transition to PlayScreen
             currentScreen = StartScreen;
             // Reset flags for the new screen
-            startSoundPlayed = false;
-            playSoundPlayed = false;
+            
         }
         // startscreem
         if (currentScreen == StartScreen && CheckCollisionPointRec(mousePoint, startbtnbounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
@@ -148,8 +150,7 @@ int main(void)
             // Transition to PlayScreen
             currentScreen = PlayScreen;
             // Reset flags for the new screen
-            startSoundPlayed = false;
-            playSoundPlayed = false;
+            
         }
 
         // playscreen
@@ -158,8 +159,7 @@ int main(void)
             // Transition to PlayScreen
             currentScreen = StartScreen;
             // Reset flags for the new screen
-            startSoundPlayed = false;
-            playSoundPlayed = false;
+            
         }
 
         switch (currentScreen)
@@ -170,7 +170,7 @@ int main(void)
             if (!IsMusicStreamPlaying(startSound))
             {
                 PlayMusicStream(startSound);
-                startSoundPlayed = true;
+                
             }
             UpdateMusicStream(startSound);
 
@@ -229,7 +229,7 @@ int main(void)
                 {
                     
                     PlayMusicStream(playSound);                   
-                    playSoundPlayed = true;
+                    
                 }                
                 UpdateMusicStream(playSound);
                 // ball moving
@@ -327,13 +327,31 @@ int main(void)
         }
         case StartScreen:
         {
+            // render background color
+            ClearBackground(startscreen_color);
             // render Ping Pong Ping logo
             DrawTexture(pingpong_text, ((screenWidth/2)-(pingpong_text.width/2)), ((screenHeight/2)-(pingpong_text.height/2)), WHITE);
-            // Used ChatGPT to help with centering button and image
-            DrawRectangle((screenWidth / 2) - (startbutton.width / 2), ((screenHeight / 2) + 350), startbutton.width, startbutton.height, BLACK);
+            // render start button            
+            bool startbutton_collision = CheckCollisionPointRec(mousePoint, startbtnbounds);
+            
+            if(startbutton_collision)
+            {
+                DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, WHITE);
+            }
+            else
+            {
+                DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, BLACK);
+            }
             // measure text width
             int textWidth = MeasureText("START", 100);
-            DrawText("Click To Start", (screenWidth / 2) - (textWidth / 2), ((screenHeight / 2) + 350) + (startbutton.height / 2) - (100 / 2), 50, WHITE);
+            if(startbutton_collision)
+            {
+                DrawText("Click To Start", (screenWidth / 2) - (textWidth / 2), ((screenHeight / 2) + 350) + (startbutton.height / 2) - (100 / 2), 50, BLACK);
+            }
+            else
+            {
+                DrawText("Click To Start", (screenWidth / 2) - (textWidth / 2), ((screenHeight / 2) + 350) + (startbutton.height / 2) - (100 / 2), 50, WHITE);
+            }
             // I used ChatGPT.com to figure out how to center the image
             
             // referenced button properties from user https://www.raylib.com/examples/textures/loader.html?name=textures_sprite_button
@@ -357,6 +375,7 @@ int main(void)
             // press space text
             int spaceLength = MeasureText("Press SPACE to pause", 20);
             DrawText("Press SPACE to pause", (screenWidth/2)-(spaceLength/2), screenHeight-30, 20, BLACK);
+            
             break;
         }
     }
@@ -373,3 +392,4 @@ int main(void)
     CloseWindow();
     return 0;
 }
+

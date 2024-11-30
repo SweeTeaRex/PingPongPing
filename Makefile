@@ -1,7 +1,8 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -g 
-RELEASE_FLAGS = -Wall -Wextra -s      # Enable debugging with -g flag
+CFLAGS = -Wall -Wextra
+DEBUG_FLAGS = -g
+RELEASE_FLAGS = -Wall -Wextra -O2 -s      # Enable debugging with -g flag
 LDFLAGS = -lraylib -lm -lpthread -ldl -lrt -lX11  # Link against Raylib and other required libraries
 
 # Paths (modify these based on your setup)
@@ -17,11 +18,11 @@ TARGET = my_game                 # Output executable name
 all: debug                       # Default to debug build
 
 # Build target with debugging info
-debug: CFLAGS = $(DEBUG_FLAGS)
+debug: CFLAGS += $(DEBUG_FLAGS)
 debug: $(TARGET)
 
 # Build target with symbols stripped (release mode)
-release: CFLAGS = $(RELEASE_FLAGS)
+release: CFLAGS += $(RELEASE_FLAGS)
 release: $(TARGET)
 
 # Build the target executable
