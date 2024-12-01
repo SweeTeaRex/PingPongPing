@@ -17,7 +17,7 @@
 #include <string.h>
 #include <raylib.h>
 
-bool IsMouseOverStartButton(Rectangle, Vector2);
+
 
 typedef enum GameScreen
 {
@@ -55,19 +55,23 @@ int main(void)
 
     // ------StartScreen--------
     Color startscreen_color = {251, 72, 72, 255};
+
     
-    // title image
+    // title image0
     Image pingPong_image = LoadImage("images/pingpongping.png");
     Texture2D pingpong_text = LoadTextureFromImage(pingPong_image);
     // free memory from Image)
     UnloadImage(pingPong_image);
     
 
+    int fontSize = 100;
+    int textWidth = MeasureText("Click to Start ", fontSize);
+
     // init button
-    Rectangle startbutton = {(screenWidth / 2), (screenHeight / 2), 500, 100};
+    Rectangle startbutton = {((screenWidth / 2) - (textWidth / 2)-10), ((screenHeight / 2) + 350), textWidth+10, fontSize};
 
     // button bounds
-    Rectangle startbtnbounds = {((screenWidth / 2) - startbutton.width / 2), ((screenHeight / 2) + 350), (float)startbutton.width, (float)startbutton.height};
+    Rectangle startbtnbounds = {startbutton.x, startbutton.y, startbutton.width, startbutton.height};
 
     
 
@@ -334,6 +338,7 @@ int main(void)
             // render start button            
             bool startbutton_collision = CheckCollisionPointRec(mousePoint, startbtnbounds);
             
+            
             if(startbutton_collision)
             {
                 DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, WHITE);
@@ -343,14 +348,15 @@ int main(void)
                 DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, BLACK);
             }
             // measure text width
-            int textWidth = MeasureText("START", 100);
+            
+            
             if(startbutton_collision)
             {
-                DrawText("Click To Start", (screenWidth / 2) - (textWidth / 2), ((screenHeight / 2) + 350) + (startbutton.height / 2) - (100 / 2), 50, BLACK);
+                DrawText("Click To Start", startbtnbounds.x+10, startbtnbounds.y, startbtnbounds.height, BLACK);
             }
             else
             {
-                DrawText("Click To Start", (screenWidth / 2) - (textWidth / 2), ((screenHeight / 2) + 350) + (startbutton.height / 2) - (100 / 2), 50, WHITE);
+                DrawText("Click To Start", startbtnbounds.x+10, startbtnbounds.y, startbtnbounds.height, WHITE);
             }
             // I used ChatGPT.com to figure out how to center the image
             
