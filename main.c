@@ -95,7 +95,7 @@ int main(void)
     // init bouncing ball
     Vector2 ballPosition = {screenWidth / 2.0f, screenHeight / 2.0f};
     Vector2 ballSpeed = {7.0f, 7.0f};
-    int ballRadius = 100;
+    int ballRadius = 50;
 
     // exit.png init
     Image exit_image = LoadImage("images/exitdoor.png");
@@ -104,11 +104,13 @@ int main(void)
     UnloadImage(exit_image);
 
     // trollface.png init
-    Image trollface = LoadImage("images/whatever.png");
+    Image trollface = LoadImage("images/pingpongball.png");
+    
     Image circleTrans = GenImageColor(trollface.width, trollface.height, BLANK);
     Vector2 imageCenter = {trollface.width / 2.0f, trollface.height / 2.0f};
     ImageDrawCircleV(&circleTrans, imageCenter, ballRadius, WHITE);
     ImageAlphaMask(&trollface, circleTrans);
+    
     Texture2D troll_texture = LoadTextureFromImage(trollface);
     UnloadImage(circleTrans);
     // pause menu init
@@ -341,22 +343,22 @@ int main(void)
             
             if(startbutton_collision)
             {
-                DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, WHITE);
+                DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, BLACK);
             }
             else
             {
-                DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, BLACK);
+                DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, startscreen_color);
             }
             // measure text width
             
             
             if(startbutton_collision)
             {
-                DrawText("Click To Start", startbtnbounds.x+10, startbtnbounds.y, startbtnbounds.height, BLACK);
+                DrawText("Click To Start", startbtnbounds.x+10, startbtnbounds.y, startbtnbounds.height, startscreen_color);
             }
             else
             {
-                DrawText("Click To Start", startbtnbounds.x+10, startbtnbounds.y, startbtnbounds.height, WHITE);
+                DrawText("Click To Start", startbtnbounds.x+10, startbtnbounds.y, startbtnbounds.height, BLACK);
             }
             // I used ChatGPT.com to figure out how to center the image
             
