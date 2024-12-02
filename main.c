@@ -13,12 +13,14 @@
 //
 // Created by: Trey Adams
 
+// referenced code examples from RayLib library of examples, found here at https://www.raylib.com/examples.html
+
 #include <stdio.h>
 #include <string.h>
 #include <raylib.h>
 
 
-
+// init games screens
 typedef enum GameScreen
 {
     SplashScreen = 0,
@@ -28,22 +30,26 @@ typedef enum GameScreen
 
 int main(void)
 {
-    InitWindow(1500, 1000, "Game");
+    float screenWidth = 2000;
+    float screenHeight = 1200;
+    
+     //init window
+    InitWindow(screenWidth, screenHeight, "Game");
+    // get screen size
+       
 
-    // screen size init
-    const int screenWidth = GetScreenWidth();
-    printf("screenWidth: %i", screenWidth);
-    const int screenHeight = GetScreenHeight();
-    printf("screenHeight: %i", screenHeight);
+    printf("\nscreenWidth: %f\n", screenWidth);    
+    printf("\nscreenHeight: %f\n\n", screenHeight);   
 
     // init mouse
     Vector2 mousePoint = {0.0f, 0.0f};
     // mouse position
-    
 
     // init audio device
     InitAudioDevice();
     GameScreen currentScreen = SplashScreen;
+
+    bool isGameOver = false;
 
     // -------SplashScreen--------
     Image TREX_image = LoadImage("images/TREX.png");
@@ -51,13 +57,18 @@ int main(void)
     UnloadImage(TREX_image);
     // init top and bottom text position
     int topText_yaxis = -50;
-    int bottomText_yaxis = screenHeight+10;
+    int bottomText_yaxis = screenHeight;
 
     // ------StartScreen--------
     Color startscreen_color = {251, 72, 72, 255};
-
+    // ball size init
+    int ballRadius = 50;
+    // init alpha levels
+    float imageTREX_alpha = 0.0f;
+    float spaceText_alpha = 0.0f;
+    float top_botText_alpha = 1.0f;
     
-    // title image0
+    // pingpong_image init
     Image pingPong_image = LoadImage("images/pingpongping.png");
     Texture2D pingpong_text = LoadTextureFromImage(pingPong_image);
     // free memory from Image)
@@ -71,9 +82,18 @@ int main(void)
     Rectangle startbutton = {((screenWidth / 2) - (textWidth / 2)-10), ((screenHeight / 2) + 350), textWidth+10, fontSize};
 
     // button bounds
-    Rectangle startbtnbounds = {startbutton.x, startbutton.y, startbutton.width, startbutton.height};
+    Rectangle startbtnbounds = {startbutton.x, startbutton.y, startbutton.width, startbutton.height};   
 
-    
+    // pingpongBW init
+    Image pongballBW = LoadImage("images/pingpongBW.png");
+    ImageResize(&pongballBW, 100, 100);
+    Image startballTrans = GenImageColor(pongballBW.width, pongballBW.height, BLANK);
+    Vector2 pongBallimageCenter = {pongballBW.width / 2.0f, pongballBW.height / 2.0f};
+    ImageDrawCircleV(&startballTrans, pongBallimageCenter, ballRadius, WHITE);
+    ImageAlphaMask(&pongballBW, startballTrans);
+    Texture2D pongballBW_text = LoadTextureFromImage(pongballBW);
+    UnloadImage(startballTrans);
+    UnloadImage(pongballBW); 
 
     // ----PlayScreen------
     // init sound files
@@ -85,7 +105,8 @@ int main(void)
 
     // adjust sound volume level
     SetSoundVolume(ballbouncefx, 0.4);
-    // check for if sound is already playing
+    int leftplayerscore = 0;
+    int rightplayerscore = 0;
     
 
     // exit button
@@ -94,8 +115,8 @@ int main(void)
 
     // init bouncing ball
     Vector2 ballPosition = {screenWidth / 2.0f, screenHeight / 2.0f};
-    Vector2 ballSpeed = {7.0f, 7.0f};
-    int ballRadius = 50;
+    Vector2 ballSpeed = {GetRandomValue(7.0f, 7.0f), GetRandomValue(7.0f, 7.0f)};
+    
 
     // exit.png init
     Image exit_image = LoadImage("images/exitdoor.png");
@@ -104,15 +125,19 @@ int main(void)
     UnloadImage(exit_image);
 
     // trollface.png init
-    Image trollface = LoadImage("images/pingpongball.png");
-    
+    Image trollface = LoadImage("images/pingpongball.png");    
     Image circleTrans = GenImageColor(trollface.width, trollface.height, BLANK);
     Vector2 imageCenter = {trollface.width / 2.0f, trollface.height / 2.0f};
     ImageDrawCircleV(&circleTrans, imageCenter, ballRadius, WHITE);
-    ImageAlphaMask(&trollface, circleTrans);
-    
+    ImageAlphaMask(&trollface, circleTrans);    
     Texture2D troll_texture = LoadTextureFromImage(trollface);
     UnloadImage(circleTrans);
+    UnloadImage(trollface);
+    // ball sides for collision
+    Vector2 leftsideTop = {0, 0};
+    Vector2 leftsideBottom = {0, screenHeight};
+    Vector2 rightsideTop = {screenWidth, 0};
+    Vector2 rightsideBottom = {screenWidth, screenHeight};
     // pause menu init
     bool pause = 0;
     // init state
@@ -120,10 +145,7 @@ int main(void)
 
     // frame counter
     int framesCounter = 0;
-    // init alpha levels
-    float imageTREX_alpha = 0.0f;
-    float spaceText_alpha = 0.0f;
-    float top_botText_alpha = 1.0f;
+    
 
     // init paddles
     Rectangle paddleLeft = {(screenWidth - (screenWidth / 16) * 15), (screenHeight / 2), 25, 100};
@@ -188,9 +210,9 @@ int main(void)
                     topText_yaxis = 3;
                 }
                 bottomText_yaxis -= 0.6f;
-                if(bottomText_yaxis <= (screenHeight-53))
+                if(bottomText_yaxis <= (screenHeight-fontSize))
                 {
-                    bottomText_yaxis = (screenHeight-53);
+                    bottomText_yaxis = (screenHeight-fontSize);
                     state = 1;
                 }               
             }
@@ -221,67 +243,32 @@ int main(void)
         case StartScreen:
         {
             UpdateMusicStream(startSound);
-            break;
-        }
-        // case PlayScreen
-        case PlayScreen:
-        {
-            if (IsKeyPressed(KEY_SPACE))
-                pause = !pause;
-
-            if (!pause)
-            {
-                if (!IsMusicStreamPlaying(playSound))
-                {
-                    
-                    PlayMusicStream(playSound);                   
-                    
-                }                
-                UpdateMusicStream(playSound);
-                // ball moving
-                ballPosition.x += ballSpeed.x;
-                ballPosition.y += ballSpeed.y;
-                // Check walls collision for bouncing
-                if ((ballPosition.x >= (GetScreenWidth() - ballRadius)) || (ballPosition.x <= ballRadius))
-                    ballSpeed.x *= -1.0f;
-                if ((ballPosition.y >= (GetScreenHeight() - ballRadius)) || (ballPosition.y <= ballRadius))
-                    ballSpeed.y *= -1.0f;
-                // check paddles for collision
-                // ChatGPT used to adjust ball so sticking to paddle is avoided
-                // Left paddle
-                if (CheckCollisionCircleRec(ballPosition, ballRadius, paddleLeft))
+            // ball position
+            // ball moving
+            ballPosition.x += ballSpeed.x;
+            ballPosition.y += ballSpeed.y;
+            // Check walls collision for bouncing
+            if ((ballPosition.x >= (screenWidth - ballRadius)) || (ballPosition.x <= ballRadius))
+                ballSpeed.x *= -1.0f;
+            if ((ballPosition.y >= (screenHeight - ballRadius)) || (ballPosition.y <= ballRadius))
+                ballSpeed.y *= -1.0f;
+            // paddle collision
+            if (CheckCollisionCircleRec(ballPosition, ballRadius, paddleLeft))
                 {
                     ballSpeed.x *= -1.0f;
-                    ballSpeed.y *= 1.0f;
+                    ballSpeed.y *= 1.1f;
                     ballPosition.x = paddleLeft.x + paddleLeft.width + ballRadius;
-                    PlaySound(ballbouncefx);
+                    
                 }
                 // Right paddle
                 if (CheckCollisionCircleRec(ballPosition, ballRadius, paddleRight))
                 {
                     ballSpeed.x *= -1.0f;
-                    ballSpeed.y *= 1.0f;
+                    ballSpeed.y *= 0.8f;
                     ballPosition.x = paddleRight.x - ballRadius;
-                    PlaySound(ballbouncefx);
+                    
                 }
-                // Left paddle controls init
-                // Up key function
-                if (IsKeyDown(KEY_W))
-                {
-                    if (paddleLeft.y >= 0)
-                    {
-                        paddleLeft.y -= 15.0f;
-                    }
-                }
-                // Down key function
-                if (IsKeyDown(KEY_S))
-                {
-                    if (paddleLeft.y + paddleLeft.height < screenHeight)
-                    {
-                        paddleLeft.y += 15.0f;
-                    }
-                }
-                // right paddle moving
+                // right paddle movment
                 if (ballPosition.y < (paddleRight.y + paddleRight.height / 2))
                 {
                     paddleRight.y -= 5.5f;
@@ -290,22 +277,123 @@ int main(void)
                 {
                     paddleRight.y += 5.5f;
                 }
-                // right paddle boundary
-                if (paddleRight.y < 0)
-                    paddleRight.y = 0;
-                if ((paddleRight.y + paddleRight.height) > GetScreenHeight())
+                // left paddle movment
+                if (ballPosition.y < (paddleLeft.y + paddleLeft.height / 2))
                 {
-                    paddleRight.y = GetScreenHeight() - paddleRight.height;
-                    DrawTexture(troll_texture, ballPosition.x - (trollface.width / 2) - ballRadius, ballPosition.y - (trollface.height / 2), WHITE);
+                    paddleLeft.y -= 5.5f;
+                }
+                else if (ballPosition.y > (paddleLeft.y + paddleLeft.height / 2))
+                {
+                    paddleLeft.y += 5.5f;
+                }
+            break;
+        }
+        // case PlayScreen
+        case PlayScreen:
+        {
+            if (IsKeyPressed(KEY_SPACE))
+                pause = !pause;
+
+            if(!isGameOver)
+            {
+                if (!pause)
+                {
+                    if (!IsMusicStreamPlaying(playSound))
+                    {
+                    
+                        PlayMusicStream(playSound);                   
+                    
+                    }                
+                    UpdateMusicStream(playSound);
+                    // ball moving
+                    ballPosition.x += ballSpeed.x;
+                    ballPosition.y += ballSpeed.y;
+                    // Check walls collision for bouncing
+                    if ((ballPosition.x >= (screenWidth - ballRadius)) || (ballPosition.x <= ballRadius))
+                    {    
+                        ballSpeed.x *= -1.0f;
+                        
+                        isGameOver = true;
+                    }
+                    if ((ballPosition.y >= (screenHeight - ballRadius)) || (ballPosition.y <= ballRadius))
+                    {    
+                        ballSpeed.y *= -1.0f;
+                        
+                    }
+                    
+                    // check paddles for collision
+                    // ChatGPT used to adjust ball so sticking to paddle is avoided
+                    // Left paddle
+                    if (CheckCollisionCircleRec(ballPosition, ballRadius, paddleLeft))
+                    {
+                        ballSpeed.x *= -1.0f;
+                        ballSpeed.y *= 1.0f;
+                        ballPosition.x = paddleLeft.x + paddleLeft.width + ballRadius;
+                        PlaySound(ballbouncefx);
+                    }
+                    // Right paddle
+                    if (CheckCollisionCircleRec(ballPosition, ballRadius, paddleRight))
+                    {
+                        ballSpeed.x *= -1.0f;
+                        ballSpeed.y *= 1.0f;
+                        ballPosition.x = paddleRight.x - ballRadius;
+                        PlaySound(ballbouncefx);
+                    }
+                    // Left paddle controls init
+                    // Up key function
+                    if (IsKeyDown(KEY_W))
+                    {
+                        if (paddleLeft.y >= 0)
+                        {
+                            paddleLeft.y -= 15.0f;
+                        }
+                    }
+                    // Down key function
+                    if (IsKeyDown(KEY_S))
+                    {
+                        if (paddleLeft.y + paddleLeft.height < screenHeight)
+                        {
+                            paddleLeft.y += 15.0f;
+                        }
+                    }
+                    // right paddle moving
+                    if (ballPosition.y < (paddleRight.y + paddleRight.height / 2))
+                    {
+                        paddleRight.y -= 5.5f;
+                    }
+                    else if (ballPosition.y > (paddleRight.y + paddleRight.height / 2))
+                    {
+                        paddleRight.y += 5.5f;
+                    }
+                    // scoreboard init
+                    // left side scoreboard
+                    if(CheckCollisionCircleLine(ballPosition, ballRadius, leftsideTop, leftsideBottom))
+                    {
+                        leftplayerscore += 1;
+                    }
+                    if(CheckCollisionCircleLine(ballPosition, ballRadius, rightsideTop, rightsideBottom))
+                    {
+                        rightplayerscore += 1;
+                    }
                 }
             }
-
             if (CheckCollisionPointRec(mousePoint, exit_button_bounds) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             {    
                 currentScreen = StartScreen;
                                
             }
-            
+            if(isGameOver == true)
+            {              
+                ballPosition = (Vector2){screenWidth/2, screenHeight/2};
+                ballSpeed = ballSpeed;
+                isGameOver = false;
+            }
+            if(IsKeyPressed(KEY_R))
+            {
+                isGameOver = true;
+                leftplayerscore = 0;
+                rightplayerscore = 0;
+            }
             else
                 framesCounter++;
             break;
@@ -335,12 +423,13 @@ int main(void)
         {
             // render background color
             ClearBackground(startscreen_color);
+            
             // render Ping Pong Ping logo
             DrawTexture(pingpong_text, ((screenWidth/2)-(pingpong_text.width/2)), ((screenHeight/2)-(pingpong_text.height/2)), WHITE);
             // render start button            
             bool startbutton_collision = CheckCollisionPointRec(mousePoint, startbtnbounds);
-            
-            
+            // I used ChatGPT.com to figure out how to center the image
+            // Click to Start rectangle render
             if(startbutton_collision)
             {
                 DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, BLACK);
@@ -349,9 +438,7 @@ int main(void)
             {
                 DrawRectangle(startbtnbounds.x, startbtnbounds.y, startbtnbounds.width, startbtnbounds.height, startscreen_color);
             }
-            // measure text width
-            
-            
+            // Click to Start button color render           
             if(startbutton_collision)
             {
                 DrawText("Click To Start", startbtnbounds.x+10, startbtnbounds.y, startbtnbounds.height, startscreen_color);
@@ -359,10 +446,16 @@ int main(void)
             else
             {
                 DrawText("Click To Start", startbtnbounds.x+10, startbtnbounds.y, startbtnbounds.height, BLACK);
+            }        
+            // draw background paddles
+            DrawRectangle(paddleLeft.x, paddleLeft.y, paddleLeft.width, paddleLeft.height, BLACK);
+            DrawRectangle(paddleRight.x, paddleRight.y, paddleRight.width, paddleRight.height, BLACK);
+            // draw ball
+            DrawTexture(pongballBW_text, ballPosition.x - (pongballBW_text.width / 2), ballPosition.y - (pongballBW_text.height / 2), WHITE);
+            if (pongballBW_text.id == 0)
+            {
+                printf("Failed to load texture.\n");
             }
-            // I used ChatGPT.com to figure out how to center the image
-            
-            // referenced button properties from user https://www.raylib.com/examples/textures/loader.html?name=textures_sprite_button
             break;
         }
         case PlayScreen:
@@ -370,9 +463,11 @@ int main(void)
             // Draw Exit Sign
             DrawText("Click to Exit", (screenWidth / 2), 0, 20, BLACK);
             DrawTexture(exit_texture, (screenWidth / 2), 30, WHITE);
+            // draw score board
+            DrawText(TextFormat("TEAM\nLEFT\n  %i", leftplayerscore), (((screenWidth/2)/2)/8), (screenHeight/2), 200, LIGHTGRAY);
+            DrawText(TextFormat("TEAM\nRIGHT\n  %i", rightplayerscore), ((screenWidth/2)+(screenWidth/10)), screenHeight/2, 200, LIGHTGRAY);
             // Draw ball
             DrawTexture(troll_texture, ballPosition.x - (troll_texture.width / 2), ballPosition.y - (troll_texture.height / 2), WHITE);
-            Texture2D troll_texture = LoadTexture("images/Trollface.png");
             if (troll_texture.id == 0)
             {
                 printf("Failed to load texture.\n");
@@ -381,8 +476,9 @@ int main(void)
             DrawRectangle(paddleLeft.x, paddleLeft.y, paddleLeft.width, paddleLeft.height, BLACK);
             DrawRectangle(paddleRight.x, paddleRight.y, paddleRight.width, paddleRight.height, BLACK);
             // press space text
-            int spaceLength = MeasureText("Press SPACE to pause", 20);
-            DrawText("Press SPACE to pause", (screenWidth/2)-(spaceLength/2), screenHeight-30, 20, BLACK);
+            
+            
+            DrawText("Controls -- | W: Up S: Down SPACE: Pause | Press R to Reset  |  Press SPACE to pause", ((screenWidth/2)/2), screenHeight-30, 20, BLACK);
             
             break;
         }
@@ -390,12 +486,10 @@ int main(void)
     EndDrawing();
     }
     UnloadSound(ballbouncefx);
-    StopMusicStream(startSound);
-    StopMusicStream(playSound);
     UnloadMusicStream(startSound);
     UnloadMusicStream(playSound);
-    UnloadImage(trollface);
     UnloadTexture(troll_texture);
+    UnloadTexture(pingpong_text);
     CloseAudioDevice();
     CloseWindow();
     return 0;

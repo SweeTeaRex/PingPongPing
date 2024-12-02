@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -fsanitize=address
 DEBUG_FLAGS = -g
 RELEASE_FLAGS = -Wall -Wextra -O2 -s      # Enable debugging with -g flag
 LDFLAGS = -lraylib -lm -lpthread -ldl -lrt -lX11  # Link against Raylib and other required libraries
@@ -43,4 +43,4 @@ valgrind: debug
 
 # Run the game
 run: $(TARGET)
-	./$(TARGET)
+	LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so ./$(TARGET)
