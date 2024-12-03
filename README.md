@@ -1,5 +1,5 @@
 # PING PONG PING
-## VIDEO DEMO. https://youtu.be/Jvm9DGZ9_R8?si=C6-b13nA_WjMFNt_
+
 ### Description: Ping Pong Ping is a recreation of the game Pong, created with C, and assisted with the library RayLib.
 
 Ping Pong Ping is a recreation of the game Pong, that was popular in the late 60's. I utilized the library called "RayLib" that acts
